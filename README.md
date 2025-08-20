@@ -1,40 +1,79 @@
-Below are the steps to get your plugin running. You can also find instructions at:
 
-  https://www.figma.com/plugin-docs/plugin-quickstart-guide/
+# Syntaxer – Figma Plugin
 
-This plugin template uses Typescript and NPM, two standard tools in creating JavaScript applications.
+Automate the transformation and standardization of local variable names in Figma. Apply naming conventions, prefixes, suffixes, and custom separators to your design tokens for consistent, scalable design systems.
 
-First, download Node.js which comes with NPM. This will allow you to install TypeScript and other
-libraries. You can find the download link here:
+---
 
-  https://nodejs.org/en/download/
+## Features
 
-Next, install TypeScript using the command:
+- View and manage local variable collections in Figma
+- Apply naming conventions: kebab-case, camelCase, PascalCase, snake_case, and more
+- Configure custom prefixes, suffixes, and separators
+- Multi-platform support: web, Android, iOS
+- Compact, responsive, and accessible UI inspired by Figma dark mode
+- Drag & drop to reorder scopes
+- Bulk selection and advanced filtering for collections
+- Fully customizable and easy to use
 
-  npm install -g typescript
+---
 
-Finally, in the directory of your plugin, get the latest type definitions for the plugin API by running:
+## Installation & Usage
 
-  npm install --save-dev @figma/plugin-typings
+1. **Clone or download this repository.**
+2. Install dependencies:
+  ```sh
+  npm install
+  ```
+3. Build the plugin:
+  ```sh
+  npm run build
+  ```
+4. In Figma, go to `Plugins > Development > Import plugin from manifest...` and select the `manifest.json` file from this project.
+5. Open the plugin in Figma and start transforming your variables.
 
-If you are familiar with JavaScript, TypeScript will look very familiar. In fact, valid JavaScript code
-is already valid Typescript code.
+---
 
-TypeScript adds type annotations to variables. This allows code editors such as Visual Studio Code
-to provide information about the Figma API while you are writing code, as well as help catch bugs
-you previously didn't notice.
+## Available Scripts
 
-For more information, visit https://www.typescriptlang.org/
+- `npm run build` – Compile TypeScript to JavaScript
+- `npm run watch` – Compile in watch mode
+- `npm run lint` – Lint the codebase
+- `npm run lint:fix` – Auto-fix lint issues
 
-Using TypeScript requires a compiler to convert TypeScript (code.ts) into JavaScript (code.js)
-for the browser to run.
+---
 
-We recommend writing TypeScript code using Visual Studio code:
+## Project Structure
 
-1. Download Visual Studio Code if you haven't already: https://code.visualstudio.com/.
-2. Open this directory in Visual Studio Code.
-3. Compile TypeScript to JavaScript: Run the "Terminal > Run Build Task..." menu item,
-    then select "npm: watch". You will have to do this again every time
-    you reopen Visual Studio Code.
+- `code.ts` – Main plugin logic (TypeScript)
+- `ui.html` – User interface (HTML, CSS, JS)
+- `manifest.json` – Figma plugin configuration
+- `DOCUMENTACION_COMPLETA.md` – Technical and development documentation (in Spanish)
+- `FIGMA_UI_DESIGN_GUIDE.md` – UI design guide for visual consistency
+- `tsconfig.json` – TypeScript configuration
+- `package.json` – Dependencies and scripts
 
-That's it! Visual Studio Code will regenerate the JavaScript file every time you save.
+---
+
+## Requirements
+
+- Node.js and npm ([download here](https://nodejs.org/en/download/))
+- Figma Desktop App
+
+---
+
+## Contributing
+
+Ideas and improvements are welcome. Feel free to open issues or submit pull requests.
+
+---
+
+## Useful Resources
+
+- [Figma Plugin Official Documentation](https://www.figma.com/plugin-docs/)
+- [Included UI Design Guide](FIGMA_UI_DESIGN_GUIDE.md)
+- [Full development documentation (Spanish)](DOCUMENTACION_COMPLETA.md)
+
+---
+
+Thank you for using Syntaxer!
