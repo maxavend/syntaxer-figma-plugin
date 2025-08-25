@@ -51,13 +51,6 @@ Automate the transformation and standardization of local variable names in Figma
 
 ---
 
-## Requirements
-
-- Node.js and npm ([download here](https://nodejs.org/en/download/))
-- Figma Desktop App
-
----
-
 ## Contributing
 
 Ideas and improvements are welcome. Feel free to open issues or submit pull requests.
