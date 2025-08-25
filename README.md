@@ -48,10 +48,6 @@ Automate the transformation and standardization of local variable names in Figma
 - `code.ts` – Main plugin logic (TypeScript)
 - `ui.html` – User interface (HTML, CSS, JS)
 - `manifest.json` – Figma plugin configuration
-- `DOCUMENTACION_COMPLETA.md` – Technical and development documentation (in Spanish)
-- `FIGMA_UI_DESIGN_GUIDE.md` – UI design guide for visual consistency
-- `tsconfig.json` – TypeScript configuration
-- `package.json` – Dependencies and scripts
 
 ---
 
@@ -65,14 +61,6 @@ Automate the transformation and standardization of local variable names in Figma
 ## Contributing
 
 Ideas and improvements are welcome. Feel free to open issues or submit pull requests.
-
----
-
-## Useful Resources
-
-- [Figma Plugin Official Documentation](https://www.figma.com/plugin-docs/)
-- [Included UI Design Guide](FIGMA_UI_DESIGN_GUIDE.md)
-- [Full development documentation (Spanish)](DOCUMENTACION_COMPLETA.md)
 
 ---
 
