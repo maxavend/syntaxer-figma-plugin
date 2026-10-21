@@ -87,7 +87,7 @@ Then in Figma: **Plugins → Development → Import plugin from manifest…** an
 | `npm run lint` / `lint:fix` | Lints the plugin code and the UI. |
 | `npm run clean` | Removes the build output. |
 | `npm run icons` | Regenerates `ui/icons.js` from the official Figma icons. |
-| `npm run assets` | Renders the Community icon, cover and carousel into `publishing/` (needs Google Chrome). |
+| `npm run assets` | Renders the Community icon, cover and carousel into `publishing/` (needs Google Chrome and internet for web fonts). |
 | `npm run release` | Clean build, lint, tests and the pre-publish checks in `scripts/check-release.mjs`. |
 
 ### Project structure

@@ -1,0 +1,37 @@
+{
+  "brand": "Syntaxer",
+  "tagline": "Code syntax for your Figma variables",
+  "brief": "A Figma plugin that turns variable paths into code syntax for Web, Android and iOS. The mark should feel precise and friendly, read at 16 px in the plugin menu, and step away from the generic </> code icon.",
+  "adjectives": ["precise", "systematic", "friendly", "native to Figma"],
+  "criteria": "Distinct from other code plugins, recognisable at 16 px, works in one colour, and carries a Liquid Glass expression for the icon.",
+  "industry": "software",
+  "mockups": ["app-icon", "readme", "favicon-tab", "website", "sticker", "social"],
+  "nav": ["Features", "Presets", "Install"],
+  "brand_color": "#FF4F9A",
+  "tile_color": "#F4F5F8",
+  "greyscale": false,
+  "final": true,
+  "designer": "Syntaxer",
+  "concepts": [
+    {
+      "name": "Split token",
+      "symbol": "../svg/syntaxer-symbol-color.svg",
+      "lockup": "../svg/syntaxer-horizontal-color.svg",
+      "stacked": "../svg/syntaxer-stacked-color.svg",
+      "avatar": "../svg/syntaxer-icon-glass-light.svg",
+      "symbol_on_tile": "../svg/syntaxer-symbol-color.svg",
+      "symbol_on_dark": "../svg/syntaxer-symbol-color-on-dark.svg",
+      "lockup_on_dark": "../svg/syntaxer-horizontal-color-on-dark.svg",
+      "stacked_on_dark": "../svg/syntaxer-stacked-color-on-dark.svg",
+      "stacked_on_tile": "../svg/syntaxer-stacked-color.svg",
+      "idea": "A Figma variable hexagon split by a slash into a < and a >: the path becomes code.",
+      "rationale": [
+        "The hexagon is the variable, the slash is the path separator, the halves are code brackets",
+        "Pink is the design side, teal the code side; the gap between them is what Syntaxer does",
+        "Built on 60° geometry; the wordmark's x and y reuse the same angle and slash cut",
+        "Flat masters for one colour and small sizes, Liquid Glass layers for the icon"
+      ]
+    }
+  ],
+  "recommendation": "Use the glass icon wherever the plugin is shown as an app (Community, README, socials), the flat small icon at 32 px and below, and the flat lockups everywhere else."
+}
