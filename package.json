@@ -13,7 +13,8 @@
     "icons": "node scripts/extract-icons.mjs",
     "lint": "eslint --ext .ts,.tsx,.js --ignore-pattern node_modules --ignore-pattern dist --ignore-pattern code.js .",
     "lint:fix": "eslint --ext .ts,.tsx,.js --ignore-pattern node_modules --ignore-pattern dist --ignore-pattern code.js --fix .",
-    "watch": "npm run build:code -- --watch"
+    "watch": "npm run build:code -- --watch",
+    "test": "npm run build:code && node --test \"tests/**/*.test.mjs\""
   },
   "author": "",
   "license": "",
