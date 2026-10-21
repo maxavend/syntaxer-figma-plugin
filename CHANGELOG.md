@@ -3,6 +3,21 @@
 All notable changes to Syntaxer are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses [Semantic Versioning](https://semver.org/).
 
+## [2.0.1] - 2026-10-21
+
+Prepares Syntaxer for publishing to the Figma Community.
+
+### Changed
+
+- Error messages are written for people, not developers: technical details go to the console instead of the notification (Figma's review guidelines ask for this).
+- Notifications use the right plural ("1 variable").
+
+### Added
+
+- `npm run release`: cleans, builds, lints, tests and validates the manifest, the build output and the listing assets.
+- `npm run assets`: renders the Community icon, cover and carousel from the built UI.
+- `publishing/`: listing images, listing copy, data security answers and a pre-publish test checklist.
+
 ## [2.0.0] - 2026-10-21
 
 A redesign with a native Figma (UI3) interface, automatic name levels and a round of correctness fixes. Some generated names change, so review the preview before re-applying syntax to existing files.
@@ -58,5 +73,6 @@ A redesign with a native Figma (UI3) interface, automatic name levels and a roun
 
 - First release: set the code syntax of local variables from naming conventions, with presets, prefix, suffix, separator, scopes, word replacements, platforms and a preview.
 
+[2.0.1]: https://github.com/maxavend/syntaxer-figma-plugin/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/maxavend/syntaxer-figma-plugin/compare/v1.0.0...v2.0.0
 [1.0.0]: https://github.com/maxavend/syntaxer-figma-plugin/releases/tag/v1.0.0

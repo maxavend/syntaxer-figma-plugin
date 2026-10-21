@@ -85,7 +85,10 @@ Then in Figma: **Plugins → Development → Import plugin from manifest…** an
 | `npm run watch` | Recompiles the plugin code on change. |
 | `npm test` | Runs the plugin logic against a mock of the Figma API. |
 | `npm run lint` / `lint:fix` | Lints the plugin code and the UI. |
+| `npm run clean` | Removes the build output. |
 | `npm run icons` | Regenerates `ui/icons.js` from the official Figma icons. |
+| `npm run assets` | Renders the Community icon, cover and carousel into `publishing/` (needs Google Chrome). |
+| `npm run release` | Clean build, lint, tests and the pre-publish checks in `scripts/check-release.mjs`. |
 
 ### Project structure
 
@@ -97,8 +100,12 @@ Then in Figma: **Plugins → Development → Import plugin from manifest…** an
 │   ├── main.js              UI state and messaging
 │   ├── styles.css           Layout using Figma color tokens only
 │   └── icons.js             Generated SVG icons (do not edit)
-├── scripts/extract-icons.mjs
+├── scripts/
+│   ├── extract-icons.mjs    Builds ui/icons.js
+│   ├── render-assets.mjs    Builds the Community listing images
+│   └── check-release.mjs    Pre-publish checks
 ├── tests/plugin.test.mjs    Plugin tests with a mocked Figma API
+├── publishing/              Community listing images, copy and checklist
 ├── vite.config.mjs          Single-file build → dist/ui.html
 ├── manifest.json            Figma plugin manifest
 └── assets/                  Logo and other static assets
@@ -126,6 +133,10 @@ The UI owns the form state and sends it to the plugin, which computes names and 
 
 - The UI is fully offline: everything is bundled into `dist/ui.html` and the manifest allows no network access.
 - Colors come exclusively from Figma's `--figma-color-*` tokens. The one exception, `--figma-color-bg-menu`, works around a FigUI3 fallback that renders light-theme menus white on white.
+
+## Publishing
+
+Run `npm run release`, test the plugin in the Figma desktop app, and publish from **Plugins → Manage plugins**. [publishing/LISTING.md](publishing/LISTING.md) has the full checklist, the listing copy, the images and the data security answers.
 
 ## Changelog
 
