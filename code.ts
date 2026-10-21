@@ -114,8 +114,20 @@ function escapeRegExp(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-function errorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : String(error);
+function pluralize(count: number, word: string): string {
+  return `${count} ${word}${count === 1 ? '' : 's'}`;
+}
+
+// Mensajes para el usuario: nunca mostrar el error técnico, solo registrarlo en consola
+const USER_ERRORS = {
+  load: "Couldn't read the variables in this file. Close and reopen Syntaxer to try again.",
+  apply: "Couldn't update the code syntax. Check the preview and try again.",
+  clear: "Couldn't clear the code syntax. Check the preview and try again.",
+  unexpected: 'Something went wrong. Try again, or reopen Syntaxer.',
+};
+
+function logError(context: string, error: unknown) {
+  console.error(`[Syntaxer] ${context}:`, error);
 }
 
 function getActivePlatformKeys(): CodeSyntaxPlatformKey[] {
@@ -250,9 +262,10 @@ async function mapVariablesAndCollections() {
 
     figma.ui.postMessage({ type: 'collections-loaded', collections });
   } catch (error) {
-    figma.notify('Error loading variables: ' + errorMessage(error), { error: true });
+    logError('Loading variables failed', error);
+    figma.notify(USER_ERRORS.load, { error: true });
     // La UI queda esperando esta respuesta: enviarla vacía con el error
-    figma.ui.postMessage({ type: 'collections-loaded', collections: [], error: errorMessage(error) });
+    figma.ui.postMessage({ type: 'collections-loaded', collections: [], error: USER_ERRORS.load });
   }
 }
 
@@ -387,7 +400,7 @@ async function applyChanges(): Promise<ActionResult> {
     updatedCount++;
   }
 
-  figma.notify(`Code syntax updated for ${updatedCount} variables.`);
+  figma.notify(`Code syntax updated for ${pluralize(updatedCount, 'variable')}.`);
   updatePreview();
   return { ok: true, count: updatedCount };
 }
@@ -407,7 +420,7 @@ async function clearSelectedVariablesSyntax(): Promise<ActionResult> {
     clearedCount++;
   }
 
-  figma.notify(`Code syntax cleared for ${clearedCount} variables.`);
+  figma.notify(`Code syntax cleared for ${pluralize(clearedCount, 'variable')}.`);
   updatePreview();
   return { ok: true, count: clearedCount };
 }
@@ -418,7 +431,8 @@ async function runAction(responseType: 'changes-applied' | 'syntax-cleared', act
   try {
     result = await action();
   } catch (error) {
-    result = { ok: false, count: 0, error: errorMessage(error) };
+    logError(`${responseType} failed`, error);
+    result = { ok: false, count: 0, error: responseType === 'changes-applied' ? USER_ERRORS.apply : USER_ERRORS.clear };
   }
   if (!result.ok && result.error) figma.notify(result.error, { error: true });
   figma.ui.postMessage({ type: responseType, ...result });
@@ -512,7 +526,7 @@ figma.ui.onmessage = async (msg: PluginMessage) => {
         if (DEBUG) console.warn('[Syntaxer][Backend] Unknown message type:', msg.type);
     }
   } catch (err) {
-    if (DEBUG) console.error('[Syntaxer][Backend] Error processing message:', err);
-    figma.notify('Error in backend: ' + errorMessage(err), { error: true });
+    logError(`Handling "${msg.type}" failed`, err);
+    figma.notify(USER_ERRORS.unexpected, { error: true });
   }
 };

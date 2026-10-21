@@ -175,14 +175,29 @@ test('answers with an error when the Figma API throws', async () => {
   await plugin.send({ type: 'init' });
   await plugin.send({ type: 'update-settings', state: state() });
   await plugin.send({ type: 'apply-changes' });
-  assert.deepEqual(plugin.last('changes-applied'), { type: 'changes-applied', ok: false, count: 0, error: 'get failed' });
-  assert.ok(plugin.notifications.some((n) => n.error));
+  const result = plugin.last('changes-applied');
+  assert.equal(result.ok, false);
+  assert.equal(result.count, 0);
+  // Users get a friendly message, never the raw API error
+  assert.doesNotMatch(result.error, /get failed/);
+  assert.ok(plugin.notifications.some((n) => n.error && !/get failed/.test(n.message)));
 });
 
 test('reports a load failure instead of leaving the UI waiting', async () => {
   const plugin = bootPlugin(NAMES, { failLoad: true });
   await plugin.send({ type: 'init' });
-  assert.deepEqual(plugin.last('collections-loaded'), { type: 'collections-loaded', collections: [], error: 'load failed' });
+  const loaded = plugin.last('collections-loaded');
+  assert.deepEqual(loaded.collections, []);
+  assert.match(loaded.error, /Couldn't read the variables/);
+  assert.doesNotMatch(loaded.error, /load failed/);
+});
+
+test('pluralizes notifications', async () => {
+  const plugin = bootPlugin(['color/blue/500']);
+  await plugin.send({ type: 'init' });
+  await plugin.send({ type: 'update-settings', state: state({ collections: { tokens: { selected: true, groups: { color: true } } } }) });
+  await plugin.send({ type: 'apply-changes' });
+  assert.ok(plugin.notifications.some((n) => n.message === 'Code syntax updated for 1 variable.'));
 });
 
 test('applies presets and closes on request', async () => {
