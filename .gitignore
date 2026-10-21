@@ -12,3 +12,6 @@ code.js
 
 # OS files
 .DS_Store
+
+# Scratch output of npm run assets
+publishing/.tmp/

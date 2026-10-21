@@ -1,0 +1,21 @@
+<!doctype html>
+<!-- Hosts the UI in a 320px iframe, like Figma does (headless Chrome can't size a window that narrow) -->
+<html>
+<head>
+  <meta charset="utf-8" />
+  <style>
+    html, body { margin: 0; background: #000; }
+    iframe { display: block; border: 0; }
+  </style>
+</head>
+<body>
+  <script>
+    const query = new URLSearchParams(location.search);
+    const frame = document.createElement('iframe');
+    frame.width = 320;
+    frame.height = query.get('h') || 640;
+    frame.src = `harness.html?${query.toString()}`;
+    document.body.append(frame);
+  </script>
+</body>
+</html>
