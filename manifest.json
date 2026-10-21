@@ -9,10 +9,10 @@
   "editorType": [
     "figma"
   ],
-  "ui": "ui.html",
+  "ui": "dist/ui.html",
   "networkAccess": {
     "allowedDomains": [
-      "https://cdn.jsdelivr.net"
+      "none"
     ]
   }
 }

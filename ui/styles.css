@@ -1,0 +1,270 @@
+/* Figma tokens only (--figma-color-*), injected by Figma via themeColors: true. */
+
+/* FigUI3's fallback makes menus white-on-white in the light theme.
+   UI3 menus are dark in both themes, so pin the menu background. */
+:root {
+  --figma-color-bg-menu: #1e1e1e;
+}
+
+/* Same bug for group labels inside menus: use the menu text token, not the panel one */
+fig-select-options > fig-separator[label] {
+  --fig-separator-label-color: var(--figma-color-text-menu-tertiary);
+}
+
+fig-select-options > fig-separator[label] > label {
+  color: inherit;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+}
+
+body {
+  background: var(--figma-color-bg);
+  color: var(--figma-color-text);
+  font-family: var(--font-family);
+  font-size: 11px;
+  line-height: 16px;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* === Sections (UI3 property panel rhythm) === */
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px 16px 12px;
+  border-bottom: 1px solid var(--figma-color-border);
+}
+
+.section > fig-header {
+  padding-inline: 0;
+}
+
+/* FigUI3 indents header titles by 8px; align them with the section content */
+.section > fig-header > h3,
+.section > fig-header > h3:first-child {
+  margin: 0;
+  padding-left: 0;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 16px;
+}
+
+/* Supporting text sits right under its section title */
+.section > fig-header + .hint {
+  margin-top: -16px;
+}
+
+.section fig-field {
+  --fig-field-left-padding: 0px;
+  --fig-field-right-padding: 0px;
+  --fig-field-top-padding: 0px;
+  --fig-field-bottom-padding: 0px;
+}
+
+.section fig-field > label {
+  color: var(--figma-color-text-secondary);
+}
+
+.hint,
+.message {
+  margin: 0;
+  color: var(--figma-color-text-secondary);
+}
+
+.message--error {
+  color: var(--figma-color-text-danger);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 24px;
+}
+
+.count {
+  flex: none;
+  color: var(--figma-color-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* === Code syntax === */
+.affixes {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+#preserve-hint {
+  margin-top: -8px;
+  padding-left: 24px; /* aligns with the checkbox label */
+}
+
+/* === Name structure === */
+.sample {
+  margin-left: auto;
+  max-width: 50%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* fig-reorder is display: contents; this wrapper keeps rows on a 24px rhythm */
+.list {
+  display: flex;
+  flex-direction: column;
+}
+
+.drag-handle {
+  display: inline-flex;
+  flex: none;
+  color: var(--figma-color-icon-secondary);
+  border-radius: var(--radius-medium);
+  cursor: grab;
+}
+
+.drag-handle:hover {
+  color: var(--figma-color-icon);
+  background: var(--figma-color-bg-hover);
+}
+
+.drag-handle:focus-visible {
+  outline: var(--figma-focus-outline);
+  outline-offset: 0;
+}
+
+/* === Word replacements === */
+.replacements {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.replacements[hidden] {
+  display: none;
+}
+
+.replacement {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 24px;
+  gap: 8px;
+  align-items: center;
+}
+
+/* === Platforms === */
+.platforms {
+  display: flex;
+  gap: 16px;
+}
+
+/* === Variables === */
+.collections {
+  display: flex;
+  flex-direction: column;
+}
+
+.row--collection {
+  margin-left: -4px;
+  gap: 4px;
+}
+
+.row--collection fig-checkbox,
+.row--group fig-checkbox {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.disclosure {
+  flex: none;
+}
+
+.disclosure fig-icon {
+  transform: rotate(-90deg);
+  transition: transform 120ms ease;
+}
+
+.disclosure[aria-expanded="true"] fig-icon {
+  transform: none;
+}
+
+.groups {
+  display: flex;
+  flex-direction: column;
+  padding-left: 24px;
+}
+
+.groups[hidden] {
+  display: none;
+}
+
+/* === Preview === */
+.preview {
+  max-height: 240px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+  border-radius: var(--radius-medium);
+  background: var(--figma-color-bg-secondary);
+}
+
+.preview > .hint {
+  padding: 8px;
+}
+
+.preview-row {
+  display: flex;
+  flex-direction: column;
+  padding: 4px 8px;
+}
+
+.preview-row + .preview-row {
+  border-top: 1px solid var(--figma-color-border);
+}
+
+.preview-from {
+  color: var(--figma-color-text-secondary);
+  overflow-wrap: anywhere;
+}
+
+.preview-to {
+  font-family: "Roboto Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+
+/* === Footer === */
+.footer {
+  display: flex;
+  flex: none;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 8px 16px;
+  border-top: 1px solid var(--figma-color-border);
+  background: var(--figma-color-bg);
+}
+
+.footer fig-spinner {
+  margin-right: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .disclosure fig-icon {
+    transition: none;
+  }
+}

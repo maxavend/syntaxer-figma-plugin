@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Syntaxer</title>
+  <script type="module" src="./main.js"></script>
+</head>
+<body>
+  <main class="app">
+    <div class="scroll">
+
+      <section class="section" aria-labelledby="h-syntax">
+        <fig-header borderless><h3 id="h-syntax">Code syntax</h3></fig-header>
+        <fig-field direction="horizontal">
+          <label>Preset</label>
+          <fig-select id="preset" variant="input" full value="css-variables">
+            <fig-select-options>
+              <fig-select-option value="css-variables">CSS variables</fig-select-option>
+              <fig-select-option value="scss">SCSS / Sass</fig-select-option>
+              <fig-select-option value="less">Less</fig-select-option>
+              <fig-select-option value="tailwind">Tailwind CSS</fig-select-option>
+              <fig-select-option value="android">Android</fig-select-option>
+              <fig-select-option value="ios">iOS (Swift)</fig-select-option>
+            </fig-select-options>
+          </fig-select>
+        </fig-field>
+        <fig-field direction="horizontal">
+          <label>Naming</label>
+          <fig-select id="naming" variant="input" full value="kebab-case">
+            <fig-select-options>
+              <fig-select-option value="kebab-case">kebab-case</fig-select-option>
+              <fig-select-option value="camelCase">camelCase</fig-select-option>
+              <fig-select-option value="PascalCase">PascalCase</fig-select-option>
+              <fig-select-option value="snake_case">snake_case</fig-select-option>
+              <fig-select-option value="SCREAMING_SNAKE_CASE">SCREAMING_SNAKE</fig-select-option>
+              <fig-select-option value="dot.case">dot.case</fig-select-option>
+              <fig-select-option value="path/case">path/case</fig-select-option>
+              <fig-select-option value="Train-Case">Train-Case</fig-select-option>
+              <fig-select-option value="lowercase">lowercase</fig-select-option>
+              <fig-select-option value="UPPERCASE">UPPERCASE</fig-select-option>
+              <fig-separator label="Platform rules"></fig-separator>
+              <fig-select-option value="android">Android (auto)</fig-select-option>
+              <fig-select-option value="tailwind">Tailwind classes</fig-select-option>
+            </fig-select-options>
+          </fig-select>
+        </fig-field>
+        <div class="affixes">
+          <fig-field direction="vertical">
+            <label>Prefix</label>
+            <fig-input-text id="prefix" full></fig-input-text>
+          </fig-field>
+          <fig-field direction="vertical">
+            <label>Separator</label>
+            <fig-input-text id="separator" full></fig-input-text>
+          </fig-field>
+          <fig-field direction="vertical">
+            <label>Suffix</label>
+            <fig-input-text id="suffix" full></fig-input-text>
+          </fig-field>
+        </div>
+        <p class="message message--error" id="affix-error" role="alert" hidden></p>
+        <fig-checkbox id="preserveCase" label="Keep original casing"></fig-checkbox>
+        <p class="hint" id="preserve-hint">Off: fontFamily → font-family</p>
+      </section>
+
+      <section class="section" aria-labelledby="h-structure">
+        <fig-header borderless>
+          <h3 id="h-structure">Name structure</h3>
+          <span id="levels-count"></span>
+        </fig-header>
+        <p class="hint">Detected from your variable paths. Uncheck to drop a level; drag or use the arrow keys to reorder.</p>
+        <div class="list">
+          <fig-reorder id="scopes" axis="vertical" handle=".drag-handle"></fig-reorder>
+        </div>
+      </section>
+
+      <section class="section" aria-labelledby="h-replacements">
+        <fig-header borderless>
+          <h3 id="h-replacements">Word replacements</h3>
+          <fig-button id="add-replacement" variant="ghost" icon aria-label="Add replacement">
+            <fig-icon name="add"></fig-icon>
+          </fig-button>
+        </fig-header>
+        <div id="replacements" class="replacements"></div>
+      </section>
+
+      <section class="section" aria-labelledby="h-platforms">
+        <fig-header borderless><h3 id="h-platforms">Platforms</h3></fig-header>
+        <div class="platforms" role="group" aria-labelledby="h-platforms">
+          <fig-checkbox data-platform="web" label="Web"></fig-checkbox>
+          <fig-checkbox data-platform="android" label="Android"></fig-checkbox>
+          <fig-checkbox data-platform="ios" label="iOS"></fig-checkbox>
+        </div>
+      </section>
+
+      <section class="section" aria-labelledby="h-variables">
+        <fig-header borderless>
+          <h3 id="h-variables">Variables</h3>
+          <fig-checkbox id="select-all" label="All" hidden></fig-checkbox>
+        </fig-header>
+        <div id="collections" class="collections">
+          <p class="hint" id="collections-status">Loading variables…</p>
+        </div>
+      </section>
+
+      <section class="section" aria-labelledby="h-preview">
+        <fig-header borderless><h3 id="h-preview">Preview</h3></fig-header>
+        <fig-field direction="horizontal">
+          <label>Show</label>
+          <fig-select id="preview-filter" variant="input" full value="">
+            <fig-select-options>
+              <fig-select-option value="">All selected</fig-select-option>
+            </fig-select-options>
+          </fig-select>
+        </fig-field>
+        <ul id="preview" class="preview" aria-label="Preview of generated code syntax"></ul>
+      </section>
+
+    </div>
+
+    <footer class="footer">
+      <fig-button id="clear-btn" variant="secondary">Clear syntax</fig-button>
+      <fig-button id="apply-btn" variant="primary">Apply syntax</fig-button>
+    </footer>
+  </main>
+</body>
+</html>

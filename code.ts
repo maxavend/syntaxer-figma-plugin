@@ -2,8 +2,8 @@
 // Soporte para múltiples convenciones de nomenclatura y plataformas
 
 figma.showUI(__html__, {
-  width: 820,
-  height: 900,
+  width: 320,
+  height: 640,
   themeColors: true,
 });
 
@@ -35,9 +35,12 @@ interface AppSettings {
   preserveCase: boolean;
 }
 
+// Un nivel de la ruta de la variable (a/b/c → nivel 0, 1, 2). `index` es la posición
+// original del segmento; el orden del array define cómo se recompone el nombre.
 interface Scope {
   name: string;
   active: boolean;
+  index?: number;
 }
 
 interface AppState {
@@ -63,18 +66,21 @@ interface PluginMessage {
   preset?: string;
 }
 
+// Respuesta de 'changes-applied' / 'syntax-cleared': siempre se envía, también si falla
+interface ActionResult {
+  ok: boolean;
+  count: number;
+  error?: string;
+}
+
+type CodeSyntaxPlatformKey = 'WEB' | 'ANDROID' | 'iOS';
+
 // === Estado global ===
 let variables: VariableData[] = [];
 let collections: CollectionData[] = [];
 
 let currentState: AppState = {
-  scopes: [
-    { name: 'root', active: true },
-    { name: 'domain', active: true },
-    { name: 'context', active: true },
-    { name: 'element', active: true },
-    { name: 'variant', active: true }
-  ],
+  scopes: buildLevelScopes(5),
   platforms: { web: false, android: false, ios: false },
   collections: {},
   replacements: [],
@@ -91,10 +97,31 @@ let currentState: AppState = {
 
 // === Utilidades ===
 
-const DEBUG = true;
+function buildLevelScopes(depth: number): Scope[] {
+  return Array.from({ length: depth }, (_, index) => ({ name: `Level ${index + 1}`, active: true, index }));
+}
+
+// Nombres de la versión anterior (5 niveles fijos), por si llega un estado antiguo
+const LEGACY_SCOPE_INDEX: Record<string, number> = { root: 0, domain: 1, context: 2, element: 3, variant: 4 };
+
+const DEBUG = false;
 
 function kebabKey(s: string): string {
   return s.toLowerCase().replace(/\s+/g, '-');
+}
+
+function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
+function getActivePlatformKeys(): CodeSyntaxPlatformKey[] {
+  return Object.keys(currentState.platforms)
+    .filter((platform) => currentState.platforms[platform])
+    .map((platform) => (platform === 'ios' ? 'iOS' : platform.toUpperCase()) as CodeSyntaxPlatformKey);
 }
 
 function isPlainObject(v: unknown): v is Record<string, unknown> {
@@ -217,9 +244,15 @@ async function mapVariablesAndCollections() {
       });
     }
 
+    // Tantos niveles como la ruta más profunda del archivo
+    const depth = Math.max(1, ...variables.map(v => v.originalName.split('/').length));
+    currentState.scopes = buildLevelScopes(depth);
+
     figma.ui.postMessage({ type: 'collections-loaded', collections });
   } catch (error) {
-    figma.notify('Error loading variables: ' + String(error), { error: true });
+    figma.notify('Error loading variables: ' + errorMessage(error), { error: true });
+    // La UI queda esperando esta respuesta: enviarla vacía con el error
+    figma.ui.postMessage({ type: 'collections-loaded', collections: [], error: errorMessage(error) });
   }
 }
 
@@ -250,10 +283,9 @@ function applyTailwindConvention(name: string): string {
 function applyNamingConvention(name: string, convention: string): string {
   const originalParts = name.split('/');
   
-  // Reordenar las partes del nombre según el orden de los scopes
+  // Reordenar las partes del nombre según el orden de los niveles
   const reorderedParts = currentState.scopes.map(scope => {
-    const scopeMap = { root: 0, domain: 1, context: 2, element: 3, variant: 4 };
-    const index = scopeMap[scope.name as keyof typeof scopeMap];
+    const index = typeof scope.index === 'number' ? scope.index : LEGACY_SCOPE_INDEX[scope.name];
     return { part: originalParts[index], active: scope.active };
   }).filter(item => item.active && item.part)
     .map(item => item.part);
@@ -262,7 +294,8 @@ function applyNamingConvention(name: string, convention: string): string {
 
   (currentState.replacements || []).forEach(r => {
     if (!r || !r.original) return;
-    const rx = new RegExp(r.original, 'gi');
+    // Reemplazo literal (sin distinguir mayúsculas): "(" o "." no rompen ni comodinan
+    const rx = new RegExp(escapeRegExp(r.original), 'gi');
     processedName = processedName.replace(rx, r.replacement ?? '');
   });
 
@@ -337,82 +370,58 @@ function updatePreview() {
   });
 }
 
-async function applyChanges() {
-  try {
-    let updatedCount = 0;
-    const variablesToUpdate = getSelectedVariables();
+async function applyChanges(): Promise<ActionResult> {
+  const platformKeys = getActivePlatformKeys();
+  const variablesToUpdate = getSelectedVariables();
+  if (platformKeys.length === 0) return { ok: false, count: 0, error: 'Select at least one platform.' };
+  if (variablesToUpdate.length === 0) return { ok: false, count: 0, error: 'Select at least one collection or group.' };
 
-    for (const v of variablesToUpdate) {
-      const figmaVariable = await figma.variables.getVariableByIdAsync(v.id);
-      if (!figmaVariable) continue;
+  let updatedCount = 0;
+  for (const v of variablesToUpdate) {
+    const figmaVariable = await figma.variables.getVariableByIdAsync(v.id);
+    if (!figmaVariable) continue;
 
-      const baseName = applyNamingConvention(v.originalName, currentState.settings.naming);
-      const finalName = generateFinalName(baseName);
-
-      let changed = false;
-      
-      Object.keys(currentState.platforms).forEach((platform: string) => {
-        const isActive = currentState.platforms[platform];
-        if (isActive) {
-          const variableWithApi = figmaVariable as any;
-          const platformKey = (platform === 'ios' ? 'iOS' : platform.toUpperCase()) as 'WEB' | 'ANDROID' | 'iOS';
-          
-          if (typeof variableWithApi.setVariableCodeSyntax === 'function') {
-            variableWithApi.setVariableCodeSyntax(platformKey, finalName);
-            changed = true;
-          }
-        }
-      });
-      
-      if (changed) {
-        updatedCount++;
-      }
-    }
-
-    figma.notify(`✅ Code Syntax updated for ${updatedCount} variables.`);
-    updatePreview();
-  } catch (error) {
-    figma.notify('Error applying changes: ' + String(error), { error: true });
+    const baseName = applyNamingConvention(v.originalName, currentState.settings.naming);
+    const finalName = generateFinalName(baseName);
+    platformKeys.forEach((platformKey) => figmaVariable.setVariableCodeSyntax(platformKey, finalName));
+    updatedCount++;
   }
+
+  figma.notify(`Code syntax updated for ${updatedCount} variables.`);
+  updatePreview();
+  return { ok: true, count: updatedCount };
 }
 
-async function clearSelectedVariablesSyntax() {
-  try {
-    let clearedCount = 0;
-    const variablesToClear = getSelectedVariables();
-    if (variablesToClear.length === 0) return;
+async function clearSelectedVariablesSyntax(): Promise<ActionResult> {
+  const platformKeys = getActivePlatformKeys();
+  const variablesToClear = getSelectedVariables();
+  if (platformKeys.length === 0) return { ok: false, count: 0, error: 'Select at least one platform.' };
+  if (variablesToClear.length === 0) return { ok: false, count: 0, error: 'Select at least one collection or group.' };
 
-    const firstVar = await figma.variables.getVariableByIdAsync(variablesToClear[0].id);
-    if (firstVar && typeof (firstVar as any).removeVariableCodeSyntax !== 'function') {
-      figma.notify('Error: To clear syntax, please update your packages with `npm install @figma/plugin-typings@latest`', { error: true, timeout: 5000 });
-      return;
-    }
+  let clearedCount = 0;
+  for (const v of variablesToClear) {
+    const figmaVariable = await figma.variables.getVariableByIdAsync(v.id);
+    if (!figmaVariable) continue;
 
-    for (const v of variablesToClear) {
-      const figmaVariable = await figma.variables.getVariableByIdAsync(v.id);
-      if (!figmaVariable) continue;
-
-      let changed = false;
-      Object.keys(currentState.platforms).forEach((platform: string) => {
-        const isActive = currentState.platforms[platform];
-        if (isActive) {
-          const variableWithApi = figmaVariable as any;
-          const platformKey = (platform === 'ios' ? 'iOS' : platform.toUpperCase()) as 'WEB' | 'ANDROID' | 'iOS';
-          
-          variableWithApi.removeVariableCodeSyntax(platformKey); 
-          changed = true;
-        }
-      });
-      if (changed) {
-        clearedCount++;
-      }
-    }
-
-    figma.notify(`🗑️ Code Syntax cleared for ${clearedCount} variables.`);
-    updatePreview();
-  } catch (error) {
-    figma.notify('Error clearing Code Syntax: ' + String(error), { error: true });
+    platformKeys.forEach((platformKey) => figmaVariable.removeVariableCodeSyntax(platformKey));
+    clearedCount++;
   }
+
+  figma.notify(`Code syntax cleared for ${clearedCount} variables.`);
+  updatePreview();
+  return { ok: true, count: clearedCount };
+}
+
+// Ejecuta una acción principal y siempre responde a la UI, para que nunca quede en "cargando"
+async function runAction(responseType: 'changes-applied' | 'syntax-cleared', action: () => Promise<ActionResult>) {
+  let result: ActionResult;
+  try {
+    result = await action();
+  } catch (error) {
+    result = { ok: false, count: 0, error: errorMessage(error) };
+  }
+  if (!result.ok && result.error) figma.notify(result.error, { error: true });
+  figma.ui.postMessage({ type: responseType, ...result });
 }
 
 function applyPreset(preset: string) {
@@ -488,13 +497,11 @@ figma.ui.onmessage = async (msg: PluginMessage) => {
         break;
       
       case 'apply-changes':
-        await applyChanges();
-        figma.ui.postMessage({ type: 'changes-applied' });
+        await runAction('changes-applied', applyChanges);
         break;
 
       case 'clear-syntax':
-        await clearSelectedVariablesSyntax();
-        figma.ui.postMessage({ type: 'syntax-cleared' });
+        await runAction('syntax-cleared', clearSelectedVariablesSyntax);
         break;
 
       case 'close':
@@ -506,6 +513,6 @@ figma.ui.onmessage = async (msg: PluginMessage) => {
     }
   } catch (err) {
     if (DEBUG) console.error('[Syntaxer][Backend] Error processing message:', err);
-    figma.notify('Error in backend: ' + String(err), { error: true });
+    figma.notify('Error in backend: ' + errorMessage(err), { error: true });
   }
 };
