@@ -32,6 +32,7 @@ interface AppSettings {
   prefix: string;
   suffix: string;
   separator: string;
+  preserveCase: boolean;
 }
 
 interface Scope {
@@ -80,9 +81,10 @@ let currentState: AppState = {
   settings: {
     preset: 'css-variables',
     naming: 'kebab-case',
-    prefix: '--',
-    suffix: '',
+    prefix: 'var(--',
+    suffix: ')',
     separator: '-',
+    preserveCase: false,
   },
   previewFilter: '',
 };
@@ -103,59 +105,65 @@ function normalizeNameBase(name: string): string {
   return name.replace(/[^\w\s/.-]/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
+// Divide un nombre en palabras. Los límites camelCase (fontFamily → font, Family)
+// también separan palabras, salvo que se pida conservar el casing original.
+function splitWords(str: string): string[] {
+  let s = normalizeNameBase(str);
+  if (!currentState.settings.preserveCase) {
+    s = s.replace(/([a-z0-9])([A-Z])/g, '$1 $2').replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2');
+  }
+  return s.split(/[._/\s-]+/).filter(Boolean);
+}
+
+function caseWord(w: string): string {
+  return currentState.settings.preserveCase ? w : w.toLowerCase();
+}
+
+function capitalize(w: string): string {
+  const cased = caseWord(w);
+  return cased.charAt(0).toUpperCase() + cased.slice(1);
+}
+
 function toCamelCase(str: string): string {
-  const s = normalizeNameBase(str)
-    .toLowerCase()
-    .replace(/[._/\s-]+(\w|$)/g, (_m, c: string) => (c ? c.toUpperCase() : ''));
-  return s.charAt(0).toLowerCase() + s.slice(1);
+  const [first = '', ...rest] = splitWords(str);
+  const head = caseWord(first);
+  return head.charAt(0).toLowerCase() + head.slice(1) + rest.map(capitalize).join('');
 }
 
 function toPascalCase(str: string): string {
-  return normalizeNameBase(str)
-    .toLowerCase()
-    .replace(/(?:^|[._/\s-]+)(\w)/g, (_m, c: string) => (c ? c.toUpperCase() : ''));
+  return splitWords(str).map(capitalize).join('');
 }
 
 function toSnakeCase(str: string): string {
-  return normalizeNameBase(str).toLowerCase().replace(/[._/\s-]+/g, '_');
+  return splitWords(str).map(caseWord).join('_');
 }
 
 function toKebabCase(str: string): string {
-  return normalizeNameBase(str).toLowerCase().replace(/[._/\s-]+/g, '-');
+  return splitWords(str).map(caseWord).join('-');
 }
 
 function toDotCase(str: string): string {
-  return normalizeNameBase(str).toLowerCase().replace(/[-_/.\s]+/g, '.');
+  return splitWords(str).map(caseWord).join('.');
 }
 
 function toPathCase(str: string): string {
-  return normalizeNameBase(str).toLowerCase().replace(/[.\-_ \t]+/g, '/');
+  return splitWords(str).map(caseWord).join('/');
 }
 
 function toTrainCase(str: string): string {
-  return normalizeNameBase(str)
-    .toLowerCase()
-    .split(/[._/\s-]+/)
-    .filter(Boolean)
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-    .join('-');
+  return splitWords(str).map(capitalize).join('-');
 }
 
 function toUpperCaseFlat(str: string): string {
-  return normalizeNameBase(str).toUpperCase().replace(/[._/\s-]+/g, '');
+  return splitWords(str).join('').toUpperCase();
 }
 
 function toLowerCaseFlat(str: string): string {
-  return normalizeNameBase(str).toLowerCase().replace(/[._/\s-]+/g, '');
+  return splitWords(str).join('').toLowerCase();
 }
 
 function toTitleCaseWithSpaces(str: string): string {
-  return normalizeNameBase(str)
-    .toLowerCase()
-    .split(/[._/\s-]+/)
-    .filter(Boolean)
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(' ');
+  return splitWords(str).map(capitalize).join(' ');
 }
 
 
@@ -295,27 +303,29 @@ function generateFinalName(baseName: string): string {
   return `${prefix ?? ''}${adjusted}${suffix ?? ''}`;
 }
 
-function getFilteredVariables(): VariableData[] {
-  if (currentState.previewFilter) {
-    const [colName, groupName] = currentState.previewFilter.split('::');
-    return variables.filter(v => {
-      if (groupName) {
-        return v.collectionName === colName && v.originalName.startsWith(groupName + '/');
-      }
-      return v.collectionName === colName;
-    });
-  }
-
+// Variables afectadas por Apply / Clear: solo depende de los grupos marcados
+function getSelectedVariables(): VariableData[] {
   return variables.filter((v) => {
     const collectionKey = kebabKey(v.collectionName);
     const groupName = v.originalName.split('/')[0];
-    const collectionState = currentState.collections[collectionKey];
-    return collectionState?.selected && collectionState.groups?.[groupName];
+    return Boolean(currentState.collections[collectionKey]?.groups?.[groupName]);
+  });
+}
+
+// El filtro del preview solo acota lo que se muestra, nunca lo que se aplica
+function getPreviewVariables(): VariableData[] {
+  const selected = getSelectedVariables();
+  if (!currentState.previewFilter) return selected;
+
+  const [colName, groupName] = currentState.previewFilter.split('::');
+  return selected.filter(v => {
+    if (v.collectionName !== colName) return false;
+    return !groupName || v.originalName.split('/')[0] === groupName;
   });
 }
 
 function updatePreview() {
-  const previewVariables = getFilteredVariables().map((v) => {
+  const previewVariables = getPreviewVariables().map((v) => {
     const baseName = applyNamingConvention(v.originalName, currentState.settings.naming);
     const finalName = generateFinalName(baseName);
     return { ...v, newName: finalName };
@@ -330,7 +340,7 @@ function updatePreview() {
 async function applyChanges() {
   try {
     let updatedCount = 0;
-    const variablesToUpdate = getFilteredVariables();
+    const variablesToUpdate = getSelectedVariables();
 
     for (const v of variablesToUpdate) {
       const figmaVariable = await figma.variables.getVariableByIdAsync(v.id);
@@ -369,7 +379,7 @@ async function applyChanges() {
 async function clearSelectedVariablesSyntax() {
   try {
     let clearedCount = 0;
-    const variablesToClear = getFilteredVariables();
+    const variablesToClear = getSelectedVariables();
     if (variablesToClear.length === 0) return;
 
     const firstVar = await figma.variables.getVariableByIdAsync(variablesToClear[0].id);
@@ -410,7 +420,7 @@ function applyPreset(preset: string) {
 
   switch (preset) {
     case 'css-variables':
-      newSettings = { ...newSettings, naming: 'kebab-case', prefix: '--', suffix: '', separator: '-' };
+      newSettings = { ...newSettings, naming: 'kebab-case', prefix: 'var(--', suffix: ')', separator: '-' };
       break;
     case 'scss':
       newSettings = { ...newSettings, naming: 'kebab-case', prefix: '$', suffix: '', separator: '-' };

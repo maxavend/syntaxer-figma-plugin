@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Syntaxer</title>
-  <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.7/Sortable.min.js"></script>
   
   <style>
   /* === Theme Variables and Design Tokens === */
@@ -146,6 +146,14 @@
       background-position: center;
       background-size: 12px 12px;
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23fafafa' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E");
+    }
+    .check:indeterminate { border-color: var(--ring-color); }
+    .check:indeterminate::after {
+      content: "";
+      width: 8px;
+      height: 2px;
+      border-radius: 1px;
+      background: #fafafa;
     }
 
   /* === Scope Pills & Drag-and-Drop === */
@@ -331,17 +339,27 @@
         <div class="grid-3">
           <div class="form-group">
             <label for="prefix" class="label">Prefix</label>
-            <input class="input" id="prefix" value="var(--" />
+            <input class="input" id="prefix" />
           </div>
           <div class="form-group">
             <label for="separator" class="label">Separator</label>
-            <input class="input" id="separator" value="-" />
+            <input class="input" id="separator" />
           </div>
           <div class="form-group">
             <label for="suffix" class="label">Suffix</label>
-            <input class="input" id="suffix" value=")" />
+            <input class="input" id="suffix" />
           </div>
         </div>
+        <label class="row-switch">
+          <span>
+            <span class="label">Keep original casing</span>
+            <span class="section-description">Off: fontFamily → font-family. On: fontFamily stays fontFamily.</span>
+          </span>
+          <span class="switch">
+            <input type="checkbox" class="switch-input" role="switch" id="preserveCase" />
+            <span class="switch-track"></span><span class="switch-knob"></span>
+          </span>
+        </label>
       </div>
     </div>
 
@@ -487,13 +505,24 @@
         settings: {
           preset: 'css-variables',
           naming: 'kebab-case',
-          prefix: '--',
-          suffix: '',
-          separator: '-'
+          prefix: 'var(--',
+          suffix: ')',
+          separator: '-',
+          preserveCase: false
         },
         previewFilter: ''
       };
       let localCollections = [];
+
+  // Form control id -> appState.settings key
+      const SETTING_KEYS = {
+        codePreset: 'preset',
+        namingConvention: 'naming',
+        prefix: 'prefix',
+        suffix: 'suffix',
+        separator: 'separator',
+        preserveCase: 'preserveCase',
+      };
 
   // === DOM Element References ===
       const dom = {
@@ -502,6 +531,7 @@
         prefix: document.getElementById('prefix'),
         suffix: document.getElementById('suffix'),
         separator: document.getElementById('separator'),
+        preserveCase: document.getElementById('preserveCase'),
         scopePills: document.getElementById('scope-pills'),
         platformsContainer: document.getElementById('platforms-container'),
         replacements: {
@@ -580,7 +610,7 @@
         if (!list.length) {
             dom.preview.tbody.innerHTML = `
                 <div class="tr"><div class="td" style="grid-column:1/-1; text-align:center; color:var(--text-muted);">
-                    No variables to display.
+                    No variables to display. Select collections or groups above.
                 </div></div>`;
             return;
         }
@@ -604,7 +634,7 @@
         const getGroups = (collection) => {
           const groups = [...new Set(collection.variables.map(v => (v.name || '').split('/')[0]))];
           return groups.map(groupName => {
-            const count = collection.variables.filter(v => (v.name || '').startsWith(groupName + '/')).length;
+            const count = collection.variables.filter(v => (v.name || '').split('/')[0] === groupName).length;
             return { name: groupName, count };
           });
         };
@@ -675,10 +705,11 @@
         if (!target) return;
         
         const id = target.id;
-        const value = target.value;
+        const value = target.type === 'checkbox' ? target.checked : target.value;
+        const settingKey = SETTING_KEYS[id];
 
-        if (id in appState.settings) {
-            appState.settings[id] = value;
+        if (settingKey) {
+            appState.settings[settingKey] = value;
         }
 
         if (id === 'codePreset') {
@@ -745,9 +776,8 @@
             const panel = headerBtn.nextElementSibling;
             const checkbox = headerBtn.querySelector('.check');
             if (panel && panel.querySelector('.acc-panel-inner').children.length === 0) {
-              checkbox.checked = !checkbox.checked;
-              const clickEvent = new MouseEvent('click', { bubbles: true });
-              checkbox.dispatchEvent(clickEvent);
+              // click() toggles the checkbox and bubbles back into this handler
+              checkbox.click();
               return;
             }
             
@@ -783,11 +813,35 @@
           } else if (type === 'group-check' && collectionKey && groupName) {
               appState.collections[collectionKey].groups[groupName] = checkbox.checked;
           }
+          syncSelectionCheckboxes();
           bridge.updateSettings();
         }
       };
 
   // === Utility Functions ===
+  // Derive collection / "all" checkbox state from the checked groups
+      const syncSelectionCheckboxes = () => {
+        let totalGroups = 0;
+        let totalChecked = 0;
+        Object.entries(appState.collections).forEach(([key, coll]) => {
+          const values = Object.values(coll.groups);
+          const checked = values.filter(Boolean).length;
+          totalGroups += values.length;
+          totalChecked += checked;
+          coll.selected = values.length > 0 && checked === values.length;
+          const cb = dom.collectionsContainer.querySelector(`.check[data-type="collection-check"][data-collection-key="${key}"]`);
+          if (cb) {
+            cb.checked = coll.selected;
+            cb.indeterminate = checked > 0 && !coll.selected;
+          }
+        });
+        const allCb = dom.collectionsContainer.querySelector('.check[data-collection="all"]');
+        if (allCb) {
+          allCb.checked = totalGroups > 0 && totalChecked === totalGroups;
+          allCb.indeterminate = totalChecked > 0 && !allCb.checked;
+        }
+      };
+
       const showToast = (message) => {
         dom.toast.textContent = message;
         dom.toast.classList.add('show');
@@ -800,6 +854,7 @@
         dom.prefix.value = settings.prefix;
         dom.suffix.value = settings.suffix;
         dom.separator.value = settings.separator;
+        dom.preserveCase.checked = Boolean(settings.preserveCase);
         Object.assign(appState.settings, settings);
       };
 
@@ -817,6 +872,7 @@
         dom.prefix.addEventListener('input', handleSettingsChange);
         dom.suffix.addEventListener('input', handleSettingsChange);
         dom.separator.addEventListener('input', handleSettingsChange);
+        dom.preserveCase.addEventListener('change', handleSettingsChange);
         dom.scopePills.addEventListener('click', handleScopeToggle);
         dom.platformsContainer.addEventListener('change', handlePlatformToggle);
         dom.replacements.addBtn.addEventListener('click', handleAddReplacement);
@@ -866,22 +922,27 @@
       });
 
   // === Application Startup ===
+      updateFormFromSettings(appState.settings);
       renderReplacements();
       renderScopePills();
       setupEventListeners();
-      
-      new Sortable(dom.scopePills, {
-        animation: 150,
-        ghostClass: 'pill-ghost',
-        dragClass: 'pill-drag',
-        onEnd: (evt) => {
-          const item = appState.scopes.splice(evt.oldIndex, 1)[0];
-          appState.scopes.splice(evt.newIndex, 0, item);
-          bridge.updateSettings();
-        },
-      });
-
       bridge.init();
+
+  // Drag-to-reorder is optional: if the CDN is unreachable the rest of the plugin still works
+      if (typeof Sortable === 'function') {
+        new Sortable(dom.scopePills, {
+          animation: 150,
+          ghostClass: 'pill-ghost',
+          dragClass: 'pill-drag',
+          onEnd: (evt) => {
+            const item = appState.scopes.splice(evt.oldIndex, 1)[0];
+            appState.scopes.splice(evt.newIndex, 0, item);
+            bridge.updateSettings();
+          },
+        });
+      } else {
+        console.warn('[Syntaxer] SortableJS failed to load; scope reordering is disabled.');
+      }
     });
   </script>
 </body>
