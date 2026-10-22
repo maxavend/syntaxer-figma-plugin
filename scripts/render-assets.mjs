@@ -30,6 +30,9 @@ writeFileSync(`${tmp}harness.html`, ui.replace('</body>', `<script>${mock}</scri
 copyFileSync(`${source}frame.html`, `${tmp}frame.html`);
 copyFileSync(`${source}slide.html`, `${tmp}slide.html`);
 copyFileSync(`${root}assets/syntaxer-logo.png`, `${tmp}logo.png`);
+copyFileSync(`${root}assets/logo/svg/syntaxer-symbol-glass.svg`, `${tmp}symbol.svg`);
+copyFileSync(`${root}assets/logo/svg/syntaxer-wordmark-night.svg`, `${tmp}wordmark.svg`);
+copyFileSync(`${root}assets/logo/svg/syntaxer-icon-small.svg`, `${tmp}icon.svg`);
 
 function screenshot(page, file, width, height, scale, extraArgs = []) {
   execFileSync(chrome, [
@@ -54,6 +57,8 @@ const shots = {
   naming: 'theme=dark&open=naming',
   levels: 'theme=dark&scroll=h-structure',
   preview: 'theme=dark&scroll=h-variables',
+  'preview-light': 'theme=light&scroll=h-preview',
+  'levels-light': 'theme=light&scroll=h-structure',
 };
 console.log('Plugin screenshots');
 for (const [name, query] of Object.entries(shots)) {
@@ -63,7 +68,7 @@ for (const [name, query] of Object.entries(shots)) {
 // 2. Cover and carousel (1920×1080)
 console.log('Listing images');
 screenshot('slide.html?variant=cover', `${out}cover-1920x1080.png`, 1920, 1080, 1);
-['presets', 'levels', 'preview'].forEach((variant, i) => {
+['platforms', 'presets', 'naming', 'structure', 'replacements', 'preview', 'native'].forEach((variant, i) => {
   screenshot(`slide.html?variant=${variant}`, `${out}carousel-${i + 1}-${variant}.png`, 1920, 1080, 1);
 });
 

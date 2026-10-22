@@ -11,7 +11,7 @@ npm run release
 
 `npm run release` cleans, builds, lints, runs the tests and validates the manifest, the build output and the assets in this folder. Publish only when it ends with **Ready to publish**.
 
-If the UI changed, regenerate the listing images first (needs Google Chrome):
+If the UI or the logo changed, regenerate the listing images first (needs Google Chrome and an internet connection for the Inter and JetBrains Mono web fonts):
 
 ```bash
 npm run assets
@@ -80,7 +80,7 @@ Software development (or the closest development category Figma offers).
 | --- | --- | --- |
 | Icon | `icon-128.png` | 128 × 128 |
 | Thumbnail / cover | `cover-1920x1080.png` | 1920 × 1080 (content inside the 1800 × 1080 safe area) |
-| Carousel (optional) | `carousel-1-presets.png`, `carousel-2-levels.png`, `carousel-3-preview.png` | 1920 × 1080 |
+| Carousel (optional) | `carousel-1-platforms.png` … `carousel-7-native.png` (7 images, in order) | 1920 × 1080 |
 
 ### Support contact
 
