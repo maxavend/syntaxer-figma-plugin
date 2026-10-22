@@ -1,6 +1,6 @@
 <!doctype html>
 <!-- Figma Community cover and carousel art, 1920×1080 (safe area 1800×1080).
-     Rendered by scripts/render-assets.mjs: slide.html?variant=cover|platforms|naming|preview -->
+     Rendered by scripts/render-assets.mjs: slide.html?variant=cover|platforms|presets|naming|structure|replacements|preview|native -->
 <html lang="en">
 <head>
   <meta charset="utf-8" />
@@ -95,6 +95,35 @@
     .target .platform { display: flex; align-items: center; gap: 12px; font-size: 26px; font-weight: 600; margin-bottom: 18px; }
     .target .platform i { width: 12px; height: 12px; border-radius: 4px; background: var(--teal); }
     .target .code { font-size: 28px; white-space: nowrap; }
+
+    /* Presets slide: six outputs for the same path */
+    .presets { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; width: 1620px; margin-top: 64px; }
+    .preset { padding: 34px 36px; text-align: left; }
+    .preset .label { font-size: 24px; margin-bottom: 14px; }
+    .preset .code { font-size: 30px; white-space: nowrap; }
+    .note { margin: 44px 0 0; color: var(--muted); font-size: 26px; }
+    .note .path { color: var(--text); }
+
+    /* Structure slide: level edits and their result */
+    .levels { margin-top: 50px; padding: 26px 34px; }
+    .levels .row { display: grid; grid-template-columns: 190px 1fr; align-items: baseline; padding: 14px 0; }
+    .levels .row + .row { border-top: 1px solid var(--line); }
+    .levels .code { font-size: 25px; white-space: nowrap; }
+    .levels s { color: #b4b1c0; text-decoration-color: var(--pink); text-decoration-thickness: 3px; }
+    .levels .hl { color: var(--teal); }
+
+    /* Replacements slide: two before/after cards */
+    .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 36px; width: 1560px; margin-top: 64px; }
+    .pair { padding: 40px 44px; text-align: left; }
+    .pair .platform { display: flex; align-items: center; gap: 12px; font-size: 26px; font-weight: 600; }
+    .pair .platform i { width: 12px; height: 12px; border-radius: 4px; background: var(--teal); }
+    .pair .rule { margin: 26px 0 30px; }
+    .pair .rule .chip { display: inline-block; }
+    .pair .from { font-size: 28px; color: var(--muted); }
+    .pair .to { margin-top: 14px; font-size: 32px; white-space: nowrap; }
+    .pair .to::before { content: "→ "; color: var(--pink); }
+
+    .mini-brand { width: 150px; height: 150px; margin: -20px 0 26px -20px; display: block; }
   </style>
 </head>
 <body>
@@ -147,22 +176,79 @@
           </div>
         </div>`,
 
+      presets: `
+        <div class="center">
+          <p class="eyebrow">Presets</p>
+          <h2>Six presets. One click.</h2>
+          <p class="lead">Each preset fills in the naming, prefix, separator and suffix. Change any of them afterwards.</p>
+          <div class="presets">
+            ${[
+              ['CSS variables', 'var(--color-background-primary)'],
+              ['SCSS / Sass', '$color-background-primary'],
+              ['Less', '@color-background-primary'],
+              ['Tailwind CSS', 'bg-primary'],
+              ['Android', 'colorBackgroundPrimary'],
+              ['iOS (Swift)', 'ColorBackgroundPrimary'],
+            ].map(([name, code]) => `<div class="card preset"><div class="label">${name}</div><div class="code">${code}</div></div>`).join('')}
+          </div>
+          <p class="note">Output for <span class="path">${sep('color/background/primary')}</span></p>
+        </div>`,
+
       naming: `
         <div class="split">
           <section>
-            <p class="eyebrow">Presets, naming and structure</p>
+            <p class="eyebrow">Naming</p>
             <h2>Names that match your&nbsp;code</h2>
-            <p class="lead">Start from a preset, pick one of 12 naming conventions, then drop, reorder or replace parts of the path.</p>
+            <p class="lead">Twelve naming conventions plus Android and Tailwind rules. Wrap every name with your own prefix, separator and suffix.</p>
             <div class="chips">
               <span class="chip">kebab-case</span><span class="chip">camelCase</span><span class="chip">PascalCase</span>
               <span class="chip">snake_case</span><span class="chip">SCREAMING_SNAKE</span><span class="chip">dot.case</span>
-              <span class="chip">background <b>→</b> bg</span><span class="chip">fontFamily <b>→</b> font-family</span>
+              <span class="chip">path/case</span><span class="chip">Train-Case</span><span class="chip">lowercase</span><span class="chip">UPPERCASE</span>
             </div>
           </section>
           <section class="stage">
-            ${win('levels.png', 'dark', 'top:130px;left:40px;transform:rotate(-4deg)')}
+            ${win('light.png', 'light', 'top:130px;left:40px;transform:rotate(-4deg)')}
             ${win('naming.png', 'dark', 'top:80px;left:360px')}
           </section>
+        </div>`,
+
+      structure: `
+        <div class="split">
+          <section>
+            <p class="eyebrow">Name structure</p>
+            <h2>Shape the path, level&nbsp;by&nbsp;level</h2>
+            <p class="lead">Syntaxer detects every level in your deepest variable path. Drop the ones you don't need and drag the rest into order.</p>
+            <div class="card levels">
+              <div class="row"><span class="label">All levels</span><span class="code">brand-color-surface-button-primary-hover</span></div>
+              <div class="row"><span class="label">Level 1 off</span><span class="code"><s>brand-</s>color-surface-button-primary-hover</span></div>
+              <div class="row"><span class="label">Level 6 first</span><span class="code"><span class="hl">hover-</span>brand-color-surface-button-primary</span></div>
+            </div>
+          </section>
+          <section class="stage">
+            ${win('levels-light.png', 'light', 'top:130px;left:40px;transform:rotate(-4deg)')}
+            ${win('levels.png', 'dark', 'top:80px;left:360px')}
+          </section>
+        </div>`,
+
+      replacements: `
+        <div class="center">
+          <p class="eyebrow">Word replacements and casing</p>
+          <h2>Short forms. Smart casing.</h2>
+          <p class="lead">Swap long words for the short ones your codebase uses, and split camelCase segments correctly, or keep them as they are.</p>
+          <div class="compare">
+            <div class="card pair">
+              <div class="platform"><i></i>Word replacement</div>
+              <div class="rule"><span class="chip">background <b>→</b> bg</span></div>
+              <div class="path from">${sep('color/background/primary')}</div>
+              <div class="code to">var(--color-<span class="hl">bg</span>-primary)</div>
+            </div>
+            <div class="card pair">
+              <div class="platform"><i></i>camelCase aware</div>
+              <div class="rule"><span class="chip">fontFamily <b>→</b> font-family</span></div>
+              <div class="path from">${sep('typography/body/fontFamily')}</div>
+              <div class="code to">var(--typography-body-<span class="hl">font-family</span>)</div>
+            </div>
+          </div>
         </div>`,
 
       preview: `
@@ -173,14 +259,32 @@
             <p class="lead">Pick collections or single groups and the platforms to write. Nothing changes until you apply.</p>
             <ul class="checks">
               <li>${check}<span>Live preview of every generated name</span></li>
+              <li>${check}<span>Whole collections or single groups</span></li>
               <li>${check}<span>Writes Web, Android and iOS code syntax</span></li>
-              <li>${check}<span>Never renames variables; <strong>Clear syntax</strong> undoes it</span></li>
-              <li>${check}<span>No network access. Runs entirely in your file</span></li>
+              <li>${check}<span><strong>Clear syntax</strong> removes it again</span></li>
             </ul>
           </section>
           <section class="stage">
             ${win('preview-light.png', 'light', 'top:130px;left:40px;transform:rotate(-4deg)')}
             ${win('preview.png', 'dark', 'top:80px;left:360px')}
+          </section>
+        </div>`,
+
+      native: `
+        <div class="split">
+          <section>
+            <img class="mini-brand" src="symbol.svg" alt="" />
+            <h2>Native to Figma. Private by&nbsp;design.</h2>
+            <ul class="checks">
+              <li>${check}<span>Figma's UI3 look in light and dark themes</span></li>
+              <li>${check}<span>Fully keyboard operable</span></li>
+              <li>${check}<span>Never renames your variables</span></li>
+              <li>${check}<span>No network access. Runs entirely in your file</span></li>
+            </ul>
+          </section>
+          <section class="stage">
+            ${win('dark.png', 'dark', 'top:80px;left:0')}
+            ${win('preview-light.png', 'light', 'top:150px;left:320px')}
           </section>
         </div>`,
     };

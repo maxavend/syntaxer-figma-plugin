@@ -80,7 +80,7 @@ Software development (or the closest development category Figma offers).
 | --- | --- | --- |
 | Icon | `icon-128.png` | 128 × 128 |
 | Thumbnail / cover | `cover-1920x1080.png` | 1920 × 1080 (content inside the 1800 × 1080 safe area) |
-| Carousel (optional) | `carousel-1-platforms.png`, `carousel-2-naming.png`, `carousel-3-preview.png` | 1920 × 1080 |
+| Carousel (optional) | `carousel-1-platforms.png` … `carousel-7-native.png` (7 images, in order) | 1920 × 1080 |
 
 ### Support contact
 
